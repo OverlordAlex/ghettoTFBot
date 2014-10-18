@@ -1,0 +1,160 @@
+import sys
+import socket
+import string
+import time
+import copy
+from random import random
+
+HOST="kore.shadowfire.org"
+PORT=6667
+CHANNEL="#tfbot"
+NICK="ghettoTFBot"
+IDENT="ghettoTFBot"
+REALNAME="ghettoTFBot"
+readbuffer=""
+
+admin = ["lumberjack", "seamonkey"]
+
+s=socket.socket( )
+s.connect((HOST, PORT))
+s.send("NICK %s\r\n" % NICK)
+s.send("USER %s %s bla :%s\r\n" % (IDENT, HOST, REALNAME))
+
+
+listofplayers = ["spng", "llama", "deradel", "lumberjack", "mrcs", "beetz", "cage", "dark", "kenny", "mitch15", "shaw"]
+
+lastgame = ["", []]
+
+
+def send(sock, channel, message, msgType="PRIVMSG"):
+     s.send(msgType + " " + channel +" :" + message + "\r\n")
+
+
+def sendUpdatedPlayers(sock, channel):
+    send(sock, channel, getPlayers())
+
+def getPlayers():
+    return str(len(listofplayers))+  "/12, " + ', '.join(listofplayers)
+
+
+while 1:
+    readbuffer = readbuffer + s.recv(1024)
+    temp = string.split(readbuffer, "\n")
+    readbuffer = temp.pop( )
+
+    for line in temp:
+        line=string.rstrip(line)
+        #line=string.split(line)
+
+        if ("PING" in line):
+            #s.send("PONG :"+string.split(line)[1][1:]+"\r\n")
+            send(s, "", string.split(line)[1][1:], msgType="PONG")
+            time.sleep(5)
+            #s.send("JOIN " + CHANNEL + "\r\n")
+            send(s, CHANNEL, "", msgType="JOIN")
+        
+        line = line.lower()
+        
+        if ("beep" in line):
+            send(s, CHANNEL, "boop")
+        
+        if ("boop?" in line):
+            send(s, CHANNEL, "U WOT MATE? I swear on me mum")
+        
+        if ("!add" in line):
+            if len(listofplayers) >= 12:
+                send(s, CHANNEL, "Mix is full, sorry")
+            else:
+        
+                l = line.split()
+                
+                if len(l) == 4:
+                    player = l[0].split('!')[0][1:]
+                else:
+                    if ((l[0].split('!')[0][1:]) in admin):
+                        player = l[-1]
+                    else:
+                        send(s, CHANNEL, "You're not my real dad, I don't have to listen to you!")
+                        continue
+                
+                if player in listofplayers:
+                    send(s, CHANNEL, "You're already added?")
+                else:    
+                
+                    listofplayers.append(player)
+                    #send(s, CHANNEL, player+  ", you've been added")
+                    
+                    if len(listofplayers) >= 12:
+                        send(s, CHANNEL, "MIX IS FULL")
+                        lastgame[0] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+                        lastgame[1] = copy.copy(listofplayers)
+                        
+                    sendUpdatedPlayers(s, CHANNEL)
+                    
+        
+        if ("!rem" in line):
+            l = line.split()
+            
+            if len(l) == 4:
+                player = l[0].split('!')[0][1:]
+            else:
+                if (l[0].split('!')[0][1:] in admin):
+                        player = l[-1]
+                else:
+                        send(s, CHANNEL, "You're not my real dad, I don't have to listen to you!")                  
+                        continue
+                
+            if player in listofplayers:
+                listofplayers.remove(player)
+                send(s, CHANNEL, player+  ", y u do dis?")
+                sendUpdatedPlayers(s, CHANNEL)
+            else:
+                send(s, CHANNEL, player+  ", you're not even in the mix?")
+            
+        if ("!new" in line):  
+            l = line.split()
+        
+            if (l[0].split('!')[0][1:] in admin):   
+                listofplayers = []
+                send(s, CHANNEL, "New mix created")
+            else:
+                send(s, CHANNEL, "Say please (ask an admin)")                  
+        
+        if ("!status" in line):
+            sendUpdatedPlayers(s, CHANNEL)
+        
+        if ("!shout" in line):
+            send(s, CHANNEL, "WHY ARE WE SHOUTING?")   
+        
+        if ("!admin" in line):
+            send(s, CHANNEL, "Thank you for using ghetto bot, your admins today are: " + ', '.join(admin))    
+        
+        if ("!lastgame" in line):
+            send(s, CHANNEL, lastgame[0] + " " + ', '.join(lastgame[1]))
+        
+        if ("!map" in line):
+            send(s, CHANNEL, "TODO...")
+
+        '''if (NICK.lower() in line):
+            r = random()
+            if r < 0.3:
+                send(s, CHANNEL, "Yeah?")
+            elif r < 0.6:
+                send(s, CHANNEL, "Ew")
+            elif r < 0.9:
+                send(s, CHANNEL, "Maybe")
+            else:
+                send(s, CHANNEL, "I swear she said she was legal")
+            
+        if (NICK.lower() in line and "best" in line):
+            send(s, CHANNEL, "Shut up baby, I know it")    '''
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
