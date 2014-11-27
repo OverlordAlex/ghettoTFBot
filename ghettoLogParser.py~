@@ -1,0 +1,8 @@
+import re
+
+f = open("log_509343.log")
+
+for line in f: 
+    l = line.split(None, 4)[4:]
+    print l
+    break
